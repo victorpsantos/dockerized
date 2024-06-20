@@ -1,0 +1,70 @@
+---
+- name: Remove Unwanted Packages
+  ansible.builtin.apt:
+    name: "{{ bootstrap_unwanted_packages }}"
+    state: absent
+    force: true
+
+- name: Remove Non-System Repositories And Keys
+  block:
+    - name: Check Non-System Repository Keys
+      become: true
+      ansible.builtin.shell: >-
+        apt-key list 2>/dev/null | awk '{ printf "%s ", $0 }' |
+        grep -oP '(?!.*{{ ansible_distribution }})(\s+[A-Z0-9]{4}){10}' | tr -d ' '
+      changed_when: false
+      register: bootstrap_nonsystem_repository_keys
+
+    - name: Remove Non-System Repository Keys
+      ansible.builtin.apt_key:
+        id: "{{ item }}"
+        state: absent
+      loop: "{{ bootstrap_nonsystem_repository_keys.stdout_lines }}"
+
+    - name: Check Non-System Repositories
+      become: true
+      ansible.builtin.shell: >-
+        awk '/^deb/ && /http|https/ && !/debian\.org/' \
+        /etc/apt/sources.list /etc/apt/sources.list.d/*.list
+      changed_when: false
+      register: bootstrap_nonsystem_repositories
+
+    - name: Remove Non-System Repositories
+      ansible.builtin.apt_repository:
+        repo: "{{ item }}"
+        state: absent
+      loop: "{{ bootstrap_nonsystem_repositories.stdout_lines }}"
+
+- name: Add Wanted Repositories And Keys
+  block:
+    - name: Add Wanted Repository Keys
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ item.keyring }}"
+        owner: root
+        group: root
+        mode: "0640"
+      loop: "{{ bootstrap_wanted_repository_keys }}"
+
+    - name: Add Wanted Repositories
+      ansible.builtin.apt_repository:
+        repo: "{{ item.repo }} {{ item.url }} {{ item.release }} {{ item.channel }}"
+        state: present
+      loop: "{{ bootstrap_wanted_repositories }}"
+
+- name: Update and Upgrade System
+  ansible.builtin.apt:
+    upgrade: full
+    update_cache: true
+  notify: System Reboot
+
+- name: Ensure Wanted Packages Are Installed
+  ansible.builtin.apt:
+    name: "{{ bootstrap_wanted_packages }}"
+    state: present
+
+- name: Clean Up Packages And Cache
+  ansible.builtin.apt:
+    autoclean: true
+    autoremove: true
+    force: true

@@ -6,3 +6,22 @@ bootstrap_wanted_kernel_modules: []
 bootstrap_kernel_parameters_extra:
   kernel.unprivileged_userns_clone: 0
   kernel.unprivileged_bpf_disabled: 1
+
+bootstrap_wanted_repositories:
+  - repo: "deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc]"
+    url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+    release: "{{ ansible_distribution_release }}"
+    channel: "stable"
+
+bootstrap_wanted_repository_keys:
+  - url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+    keyring: "/etc/apt/keyrings/docker.asc"
+
+bootstrap_wanted_packages:
+  - containerd.io
+  - docker-ce
+  - docker-ce-cli
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+bootstrap_unwanted_packages: []

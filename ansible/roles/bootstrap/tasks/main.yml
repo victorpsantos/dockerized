@@ -12,3 +12,7 @@
 - name: Include Kernel Management Tasks
   ansible.builtin.include_tasks:
     file: kernel.yml
+
+- name: Include Aptitude Management Tasks
+  ansible.builtin.include_tasks:
+    file: apt.yml
