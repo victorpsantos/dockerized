@@ -1,0 +1,65 @@
+---
+- name: Read Local Linux User Database
+  ansible.builtin.getent:
+    database: passwd
+  run_once: true
+
+- name: Read Local Linux Shadow Database
+  ansible.builtin.getent:
+    database: shadow
+  run_once: true
+
+- name: Extract System Accounts
+  ansible.builtin.set_fact:
+    bootstrap_system_accounts: "{{ bootstrap_system_accounts | default([]) + [item] }}"
+  loop: "{{ getent_passwd.keys() | list }}"
+  when:
+    - getent_passwd[item][1] | int > 0
+    - getent_passwd[item][1] | int <= boostrap_system_uid_max | int
+
+- name: Extract Common Accounts
+  ansible.builtin.set_fact:
+    bootstrap_common_accounts: "{{ bootstrap_common_accounts | default([]) + [item] }}"
+  loop: "{{ getent_passwd.keys() | list }}"
+  when:
+    - getent_passwd[item][1] | int >= boostrap_uid_min | int
+    - getent_passwd[item][1] | int <= boostrap_uid_max | int
+
+- name: Set Password Ageing For Common Accounts
+  ansible.builtin.user:
+    name: "{{ item }}"
+    password_expire_min: "{{ bootstrap_common_accounts_password_min_age }}"
+    password_expire_max: "{{ bootstrap_common_accounts_password_max_age }}"
+  loop: "{{ bootstrap_common_accounts }}"
+  when:
+    - bootstrap_common_accounts is defined
+    - bootstrap_common_accounts | length > 0
+    - getent_shadow[item][0] is not match("\*")
+    - getent_shadow[item][0] is not match("\!")
+
+- name: Extract Root Account
+  ansible.builtin.set_fact:
+    boostrap_root_account: "{{ boostrap_root_account | default([]) + [item] }}"
+  loop: "{{ getent_passwd.keys() | list }}"
+  when:
+    - getent_passwd[item][1] | int == 0
+
+- name: Set Ownership Of Home Directory(ies) To 0700
+  ansible.builtin.file:
+    mode: "0700"
+    owner: "{{ item }}"
+    path: "{{ getent_passwd[item][4] }}"
+    state: directory
+  loop: "{{ boostrap_root_account }}"
+  when:
+    - os_chmod_rootuser_home_folder | bool
+
+- name: Set Password Ageing For Root Account
+  ansible.builtin.user:
+    name: "{{ item }}"
+    password_expire_min: "{{ bootstrap_common_accounts_password_min_age }}"
+    password_expire_max: "{{ bootstrap_common_accounts_password_max_age }}"
+  loop: "{{ boostrap_root_account }}"
+  when:
+    - getent_shadow[item][0] is not match("\*")
+    - getent_shadow[item][0] is not match("\!")
