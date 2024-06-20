@@ -75,4 +75,10 @@ bootstrap_kernel_parameters:
 
 bootstrap_kernel_parameters_overwrite: {}
 
+bootstrap_unwanted_services: []
+
+bootstrap_unwanted_services_extra: []
+
+bootstrap_wanted_services: []
+
 bootstrap_apparmor_enabled: false

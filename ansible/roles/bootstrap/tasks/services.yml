@@ -1,0 +1,39 @@
+---
+# Some services do not correspond directly to package names.
+# This is the reason why there's ignore_errors: true on the tasks.
+
+- name: Combine Services List
+  ansible.builtin.set_fact:
+    bootstrap_conbined_unwanted_services: >-
+      {{
+        bootstrap_unwanted_services |
+        union(bootstrap_unwanted_services_extra) |
+        difference(bootstrap_wanted_services)
+      }}
+
+- name: Ensure Wanted Services Are Installed
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  ignore_errors: true
+  loop: "{{ bootstrap_wanted_services }}"
+
+- name: Ensure Services Are Masked
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+    force: true
+  ignore_errors: true
+  loop:
+    - "{{ bootstrap_conbined_unwanted_services }}"
+    - "{{ bootstrap_wanted_services }}"
+
+- name: Ensure Unwanted Serivces Are Not Installed
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+    purge: true
+  ignore_errors: true
+  loop: "{{ bootstrap_conbined_unwanted_services }}"

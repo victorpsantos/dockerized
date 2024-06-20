@@ -39,3 +39,44 @@ bootstrap_apparmor_parameters:
   - security=apparmor
 
 bootstrap_apparmor_mode: enforce
+
+bootstrap_unwanted_services:
+  - apache2
+  - autofs
+  - avahi-daemon
+  - bind9
+  - bluetooth
+  - bluez
+  - cups
+  - dnsmasq
+  - dovecot
+  - dovecot-imapd
+  - dovecot-pop3d
+  - ftp
+  - ftp
+  - isc-dhcp-server
+  - ldap-utils
+  - ldap-utils
+  - nfs-kernel-server
+  - nginx
+  - nis
+  - nis
+  - rpcbind
+  - rsh-client
+  - rsync
+  - samba
+  - slapd
+  - snmpd
+  - squid
+  - talk
+  - telnet
+  - tftpd-hpa
+  - vsftpd
+  - xinetd
+  - xserver-common
+  - ypbind
+  - ypserv
+
+bootstrap_unwanted_services_extra: []
+
+bootstrap_wanted_services: []

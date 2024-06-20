@@ -13,6 +13,10 @@
   ansible.builtin.include_tasks:
     file: kernel.yml
 
+- name: Include Services Management Tasks
+  ansible.builtin.include_tasks:
+    file: services.yml
+
 - name: Include Aptitude Management Tasks
   ansible.builtin.include_tasks:
     file: apt.yml
