@@ -74,3 +74,5 @@ bootstrap_kernel_parameters:
   vm.mmap_rnd_compat_bits: 16
 
 bootstrap_kernel_parameters_overwrite: {}
+
+bootstrap_apparmor_enabled: false

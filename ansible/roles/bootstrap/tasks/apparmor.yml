@@ -1,0 +1,37 @@
+---
+- name: Install AppArmor Packages
+  ansible.builtin.package:
+    name: "{{ bootstrap_apparmor_packages }}"
+    state: present
+
+- name: Check AppArmor Bootloader Parameters
+  ansible.builtin.shell:
+    cmd: >-
+      grep -E '\\blinux\\b' /boot/grub/grub.cfg | \
+      grep -qv '{{ bootstrap_apparmor_parameters | join('|') }}'
+  register: bootstrap_check_apparmor_parameters
+  changed_when: false
+
+- name: Set AppArmor Bootloader Parameters
+  ansible.builtin.lineinfile:
+    path: "/etc/default/grub"
+    regexp: '^GRUB_CMDLINE_LINUX="([^"]*)"$'
+    line: r'GRUB_CMDLINE_LINUX="\1 {{ bootstrap_apparmor_parameters }}"'
+    backup: true
+  when: bootstrap_check_apparmor_parameters.rc != 0
+
+- name: Update Bootloader
+  ansible.builtin.command:
+    cmd: grub-update
+  changed_when: false
+
+- name: Set AppArmor Profiles Mode
+  ansible.builtin.command:
+    cmd: "aa-{{ bootstrap_apparmor_mode }} /etc/apparmor.d/*"
+  changed_when: false
+
+- name: Reaload AppArmor Profiles
+  ansible.builtin.service:
+    name: apparmor
+    state: reloaded
+    enabled: true

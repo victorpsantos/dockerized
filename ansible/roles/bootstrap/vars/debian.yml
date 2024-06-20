@@ -25,3 +25,17 @@ bootstrap_wanted_packages:
   - docker-compose-plugin
 
 bootstrap_unwanted_packages: []
+
+bootstrap_apparmor_enabled: true
+
+bootstrap_apparmor_packages:
+  - apparmor
+  - apparmor-utils
+  - apparmor-profiles
+  - apparmor-profiles-extra
+
+bootstrap_apparmor_parameters:
+  - apparmor=1
+  - security=apparmor
+
+bootstrap_apparmor_mode: enforce

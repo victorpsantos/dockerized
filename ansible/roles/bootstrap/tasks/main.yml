@@ -16,3 +16,7 @@
 - name: Include Aptitude Management Tasks
   ansible.builtin.include_tasks:
     file: apt.yml
+
+- name: Include AppArmor Management Tasks
+  ansible.builtin.include_tasks:
+    file: apparmor.yml
