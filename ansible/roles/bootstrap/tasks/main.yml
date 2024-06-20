@@ -24,3 +24,7 @@
 - name: Include AppArmor Management Tasks
   ansible.builtin.include_tasks:
     file: apparmor.yml
+
+- name: Include Cron Management Tasks
+  ansible.builtin.include_tasks:
+    file: cron.yml

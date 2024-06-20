@@ -80,3 +80,10 @@ bootstrap_unwanted_services:
 bootstrap_unwanted_services_extra: []
 
 bootstrap_wanted_services: []
+
+bootstrap_cron_packages:
+  - cron 
+
+bootstrap_cron_conflict_packages:
+  - at
+  - systemd-cron

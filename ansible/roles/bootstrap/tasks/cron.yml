@@ -1,0 +1,33 @@
+---
+- name: Install Cron Packages
+  ansible.builtin.apt:
+    name: "{{ bootstrap_cron_packages }}"
+    state: present
+
+- name: Remove Cron Conflict Pakcages
+  ansible.builtin.apt:
+    name: "{{ bootstrap_cron_conflict_packages }}"
+    state: absent
+
+- name: Find Cron Files And Directories
+  ansible.builtin.find:
+    path: "/etc"
+    patterns: "{{ bootstrap_cron_entries }}"
+    file_type: any
+  register: bootstrap_found_cron_entries
+
+- name: Ensure Permissions On Cron Files And Directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop: "{{ bootstrap_found_cron_entries.files }}"
+
+- name: Ensure Cron Allow File Exists
+  ansible.builtin.copy:
+    content: root
+    dest: "/etc/cron.allow"
+    owner: root
+    group: root
+    mode: "0600"

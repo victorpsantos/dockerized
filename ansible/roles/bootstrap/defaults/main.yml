@@ -82,3 +82,13 @@ bootstrap_unwanted_services_extra: []
 bootstrap_wanted_services: []
 
 bootstrap_apparmor_enabled: false
+
+bootstrap_cron_entries:
+  - cron.hourly
+  - cron.daily
+  - cron.weekly
+  - cron.monthly
+  - cron.d
+  - crontab
+  - cron.allow
+  - cron.deny
