@@ -1,0 +1,61 @@
+---
+- name: Combine Unwanted Kernel Modules
+  ansible.builtin.set_fact:
+    bootstrap_combined_kernel_modules: >-
+      {{
+        bootstrap_unwanted_kernel_modules |
+        union(bootstrap_unwanted_kernel_modules_extra) |
+        difference(bootstrap_wanted_kernel_modules)
+      }}
+
+- name: Discover Unwanted Kernel Modules
+  ansible.builtin.find:
+    paths: "/lib/modules/{{ ansible_kernel }}/kernel"
+    patterns: "*/{{ item }}"
+    file_type: directory
+    recurse: true
+  register: bootstrap_discovered_kernel_modules
+  loop: "{{ bootstrap_combined_kernel_modules }}"
+  when: bootstrap_combined_kernel_modules | length > 0
+
+- name: Blacklist and Disable Unwanted Kernel Modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: absent
+    persistent: absent
+  loop: >-
+    {{
+      bootstrap_discovered_kernel_modules.results |
+      map(attribute='item') |
+      list
+    }}
+  when: bootstrap_discovered_kernel_modules.results | length > 0
+
+- name: Install and Enable Wanted Kernel Modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+    persistent: present
+  loop: "{{ bootstrap_wanted_kernel_modules }}"
+  when: bootstrap_wanted_kernel_modules | length > 0
+
+- name: Combine Kernel Parameters
+  ansible.builtin.set_fact:
+    bootstrap_combined_kernel_parameters: >-
+      {{
+        bootstrap_kernel_parameters |
+        combine(bootstrap_kernel_parameters_extra) |
+        sort
+      }}
+
+- name: Save Improved Kernel Parameters
+  ansible.builtin.copy:
+    content: |
+      {% for key, value in bootstrap_combined_kernel_parameters %}
+      {{ key }} = {{ value }}
+      {% endfor %}
+    dest: "/etc/sysctl.d/99-bootstrap.conf"
+    owner: root
+    group: root
+    mode: "0400"
+    backup: true

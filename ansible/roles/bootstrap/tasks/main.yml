@@ -8,3 +8,7 @@
       - "{{ ansible_distribution | lower }}.yml"
       - "{{ ansible_os_family | lower }}_{{ ansible_distribution_major_version }}.yml"
       - "{{ ansible_os_family | lower }}.yml"
+
+- name: Include Kernel Management Tasks
+  ansible.builtin.include_tasks:
+    file: kernel.yml
